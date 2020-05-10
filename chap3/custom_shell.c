@@ -10,6 +10,8 @@
 #include<sys/wait.h>
 
 #define MAXLINE 80
+#define READ_END 0
+#define WRITE_END 1
 
 void parse(char *inp,char **args,int *argc,int *command_type)
 {
@@ -36,6 +38,10 @@ void parse(char *inp,char **args,int *argc,int *command_type)
 			else if(strcmp(">",args[*argc])==0)
 			{
 				*command_type = 2 ;
+			}
+			else if(strcmp("|",args[*argc])==0)
+			{
+				*command_type = 6 ;
 			}
 			else if(strcmp("<",args[*argc])==0)
 			{
@@ -132,10 +138,62 @@ int main(void)
 				argc-=2 ;
 				// dup2(fd,STDIN_FILENO) ;
 			}
-            if(execvp(args[0],args)!=-1)
-				exit(1) ;
-			else printf("Execution Failed\n") ;
-			exit(0) ;
+			else if(command_type ==6)
+			{
+				printf("Command Type : %d\n",command_type) ;
+				// char *arg2 ;
+				int arg2 = 0 ;
+				for(int i =0;i<argc;i++)
+				{
+					if(strcmp("|",args[i])==0)
+					{
+						// arg2 = args[i+1] ;
+						arg2 = i+1 ;
+						args[i] = NULL ;
+						break ;
+					}
+				}
+				// for(int i=0;args[i]!=NULL;i++)
+				// {
+				// 	printf("%s\n",args[i]) ;
+				// }
+				// printf("HAHA LINE\n") ;
+				// printf("csdc %s\n",args[arg2]) ;
+				// for(int i=arg2;args[i]!=NULL;i++)
+				// {
+				// 	printf("%s\n",args[i]) ;
+				// }
+				int fd[2] ;
+				if(pipe(fd)==-1)
+				{
+					printf("Error in creating pipe\n") ;
+					exit(0) ;
+				}
+
+				pid_t child2 = fork() ;
+				if(child2 == 0)
+				{
+					close(fd[READ_END]);
+					dup2(fd[WRITE_END],STDOUT_FILENO);
+					close(fd[WRITE_END]) ;
+					execvp(args[0],args) ;
+				}
+				if(child2 >0)
+				{
+					close(fd[WRITE_END]) ;
+					wait(NULL) ;
+					// freopen(fd[READ_END], "r", stdin);
+					dup2(fd[READ_END],STDIN_FILENO);
+					execvp(args[arg2],args+arg2) ;
+				}
+			}
+			if(command_type !=6)
+			{
+				if(execvp(args[0],args)!=-1)
+					exit(1) ;
+				else printf("Execution Failed\n") ;
+				exit(0) ;
+			}
         }
         else if(child>0)
         {
