@@ -120,7 +120,17 @@ int main(void)
 				fd = open(args[argc-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR,0666) ;
 				args[argc-2] = NULL;
 				argc-=2 ;
-				dup2(fd,1) ;
+				dup2(fd,STDOUT_FILENO) ;
+			}
+			else if(command_type == 3 && args[argc-1][0]!='\0')
+			{
+				printf("Command Type : %d\n",command_type) ;
+				printf("FILENAME RE : %s\n",args[argc-1]) ;
+				// fd = open(args[argc-1], O_RDONLY | O_TRUNC | O_CREAT , S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR,0666) ;
+				freopen(args[argc-1], "r", stdin);
+				args[argc-2] = NULL;
+				argc-=2 ;
+				// dup2(fd,STDIN_FILENO) ;
 			}
             if(execvp(args[0],args)!=-1)
 				exit(1) ;
