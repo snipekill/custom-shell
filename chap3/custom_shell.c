@@ -11,7 +11,7 @@
 
 #define MAXLINE 80
 
-void parse(char *inp,char **args,int *argc,int *command_type,char *fileName)
+void parse(char *inp,char **args,int *argc,int *command_type)
 {
     int j=0 ;
     char newString[MAXLINE/2+1] ;
@@ -43,8 +43,10 @@ void parse(char *inp,char **args,int *argc,int *command_type,char *fileName)
 			}
 			else if(*command_type == 2 || *command_type == 3)
 			{
-				printf("FILENAME RE : %s\n",args[*argc]) ;
-				strcpy(fileName,args[*argc]) ;
+				// strcpy(fileName,args[*argc]) ;
+				// printf("FILENAME RE : %s\n",fileName) ;
+				// (*argc)-- ;
+				(*argc)++ ;
 				break ;
 			}
             (*argc)++ ;
@@ -74,10 +76,8 @@ int main(void)
         int argc = 0 ;
         char inp[MAXLINE] ;
 		command_type = 1 ;
-		char fileName[20] ;
         fgets(inp,MAXLINE,stdin) ;
-        parse(inp,args,&argc,&command_type,fileName) ;
-		fileName[0] = '\0' ;
+        parse(inp,args,&argc,&command_type) ;
         if(command_type == 4)
             break ;
         else if(command_type == 5)
@@ -90,7 +90,7 @@ int main(void)
             else
             {
 				argc = 0 ;
-                parse(his_inp,args,&argc,&command_type,fileName) ;
+                parse(his_inp,args,&argc,&command_type) ;
             }
         }
 		else
@@ -107,16 +107,20 @@ int main(void)
         // {
         //     printf("%s",args[i]) ;
         // }
-        printf("Command Type : %d\n",command_type) ;
-		printf("File Name : %s\n",fileName) ;
+        // printf("Command Type : %d\n",command_type) ;
+		// printf("FILENAME RE : %s\n",args[argc-1]) ;
+		//printf("A")
         pid_t child = fork() ;
 
         if(child == 0)
         {
-			if(command_type == 2 && fileName[0]!='\0')
+			int fd ;
+			if(command_type == 2 && args[argc-1][0]!='\0')
 			{
-				int fd = open(fileName,O_CREAT | O_RDWR) ;
-				dup2(fd,STDOUT_FILENO) ;
+				fd = open(args[argc-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR,0666) ;
+				args[argc-2] = NULL;
+				argc-=2 ;
+				dup2(fd,1) ;
 			}
             if(execvp(args[0],args)!=-1)
 				exit(1) ;
