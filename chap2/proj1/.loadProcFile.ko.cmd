@@ -1,0 +1,1 @@
+cmd_/media/psf/Home/Documents/osprogs/chap2/proj1/loadProcFile.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /media/psf/Home/Documents/osprogs/chap2/proj1/loadProcFile.ko /media/psf/Home/Documents/osprogs/chap2/proj1/loadProcFile.o /media/psf/Home/Documents/osprogs/chap2/proj1/loadProcFile.mod.o ;  true
