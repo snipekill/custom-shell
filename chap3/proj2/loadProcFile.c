@@ -5,6 +5,7 @@
 #include<linux/uaccess.h>
 // #include<linux/jiffies.h>
 // #include<linux/hash.h>
+#include<linux/sched.h>
 #include <linux/slab.h>
 
 #define BUFFER_SIZE 128
@@ -13,6 +14,8 @@
 ssize_t proc_read(struct file *file,char __user *usr_buf,size_t count,loff_t *pos) ;
 
 ssize_t proc_write(struct file *file,const char __user *usr_buf,size_t count,loff_t *pos) ;
+
+static struct task_struct *pid_task_s = NULL  ;
 // ssize t proc read(struct file *file,char __user *usr_buf,size_t count,loff_t *pos);
 
 static struct file_operations proc_ops = {
@@ -45,7 +48,10 @@ ssize_t proc_read(struct file *file,char __user *usr_buf,size_t count,loff_t *po
 		return 0 ;
 	}
 	completed = 1;
-	rv = sprintf(buffer,"HELLO WORLD\n") ;
+	if(pid_task_s==NULL)
+		rv = sprintf(buffer,"NOT A VALID PID\n") ;
+	else 
+		rv = sprintf(buffer,"Command = [%s] \n PID = [%d]\n STATE = [%ld]\n",pid_task_s->comm,pid_task_s->pid,pid_task_s->state) ;
 	
 	// rv = sprintf(buffer,"Time Elapsed in Seconds %lu",(jiffies-jif)/HZ) ;
 	copy_to_user(usr_buf,buffer,rv) ;
@@ -59,11 +65,25 @@ ssize_t proc_write(struct file *file,const char __user *usr_buf,size_t count,lof
 	// printk(KERN_INFO "COUNT %lu\n",count) ;
 	k_mem = kmalloc(count,GFP_KERNEL) ;
 	copy_from_user(k_mem,usr_buf,count) ;
-	// unsigned int pid ;
+	printk(KERN_INFO "KMEM AND VALUE %lu\n%lu\n",strlen(k_mem),count)  ;
+	unsigned long long pidt ;
+	k_mem[count] = '\0' ;
 	
-	// kstrtouint(k_mem,0,&pid) ;
-	// printk(KERN_INFO "PID VALUE %u",pid) ;
+	kstrtoll(k_mem,0,&pidt) ;
+	printk(KERN_INFO "PID VALUE %llu",pidt) ;
+	k_mem[count] = ' ' ;
 	kfree(k_mem) ;
+	struct pid *cc = find_vpid(pidt) ;
+	if(cc!=NULL)
+		printk(KERN_INFO "value %u\n",cc->level) ;
+	else 
+		printk(KERN_INFO "nno value\n") ;
+	if(pid_task(cc,PIDTYPE_PID)!=NULL)
+	{
+		printk(KERN_INFO "Inside NOT NULL\n") ;	
+		pid_task_s = pid_task(cc,PIDTYPE_PID) ;
+		printk(KERN_INFO "Inside NOT NULL\n") ;	
+	}
 	return count ;
 }
 
