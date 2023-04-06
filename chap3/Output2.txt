@@ -1,7 +1,0 @@
-Output2.txt
-a.out
-custom_shell.c
-ipc_shared_mem
-ipc_shared_pipe
-sleep.c
-zombieProcess.c
